@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Good Boy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #f5f0e8;
+      --bark:  #2b1d0e;
+      --rust:  #c4491c;
+      --sand:  #d9c9a8;
+      --fog:   #e8e1d4;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--cream);
+      font-family: 'DM Mono', monospace;
+      color: var(--bark);
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 200px;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.5;
+    }
+
+    .circle {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .circle-1 {
+      width: 520px; height: 520px;
+      background: radial-gradient(circle, var(--sand) 0%, transparent 70%);
+      top: -120px; left: -120px;
+      opacity: 0.6;
+    }
+    .circle-2 {
+      width: 380px; height: 380px;
+      background: radial-gradient(circle, #c4491c22 0%, transparent 70%);
+      bottom: -80px; right: -80px;
+      opacity: 0.8;
+    }
+
+    .hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--rust);
+      opacity: 0.75;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3.5rem, 8vw, 7rem);
+      line-height: 1.05;
+      text-align: center;
+      color: var(--bark);
+      max-width: 14ch;
+    }
+    h1 em {
+      font-style: italic;
+      color: var(--rust);
+    }
+
+    .sub {
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      color: var(--bark);
+      opacity: 0.45;
+      text-align: center;
+    }
+
+    .btn-wrap {
+      position: relative;
+      display: inline-flex;
+      margin-top: 0.5rem;
+    }
+
+    #mainBtn {
+      position: relative;
+      cursor: pointer;
+      border: 2px solid var(--bark);
+      background: transparent;
+      color: var(--bark);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 1.1rem 2.6rem;
+      outline: none;
+      transition: background 0.25s, color 0.25s, transform 0.18s;
+    }
+
+    .corner-tag {
+      position: fixed;
+      bottom: 1.6rem;
+      right: 1.8rem;
+      font-size: 0.55rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--bark);
+      opacity: 0.25;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="circle circle-1"></div>
+  <div class="circle circle-2"></div>
+
+  <section class="hero">
+    <p class="eyebrow">A daily ritual</p>
+    <h1>Every good day starts with a <em>good dog</em></h1>
+    <p class="sub">hover the button to receive your moment of joy</p>
+
+    <div class="btn-wrap" id="btnWrap">
+      <button id="mainBtn">Meet a dog</button>
+    </div>
+  </section>
+
+  <span class="corner-tag">dog.ceo / random breed</span>
+
+  <script>
+    const CSS_VARS = {
+      cream: '#f5f0e8',
+      bark:  '#2b1d0e',
+      rust:  '#c4491c',
+      fog:   '#e8e1d4',
+    };
+
+    // ── Build popup entirely in JS ──────────────────────────────────────────
+
+    const popup = document.createElement('div');
+    Object.assign(popup.style, {
+      position:       'absolute',
+      bottom:         'calc(100% + 20px)',
+      left:           '50%',
+      transform:      'translateX(-50%) translateY(8px) scale(0.94)',
+      width:          '220px',
+      height:         '220px',
+      borderRadius:   '4px',
+      overflow:       'hidden',
+      border:         `2px solid ${CSS_VARS.bark}`,
+      background:     CSS_VARS.fog,
+      opacity:        '0',
+      pointerEvents:  'none',
+      transition:     'opacity 0.3s ease, transform 0.3s ease',
+      boxShadow:      `6px 6px 0 ${CSS_VARS.bark}`,
+      zIndex:         '10',
+    });
+
+    // Arrow caret below popup
+    const caret = document.createElement('div');
+    Object.assign(caret.style, {
+      position:    'absolute',
+      bottom:      '-10px',
+      left:        '50%',
+      transform:   'translateX(-50%)',
+      width:       '0',
+      height:      '0',
+      borderLeft:  '8px solid transparent',
+      borderRight: '8px solid transparent',
+      borderTop:   `10px solid ${CSS_VARS.bark}`,
+      zIndex:      '2',
+    });
+    popup.appendChild(caret);
+
+    // Loading label
+    const loadingLabel = document.createElement('span');
+    Object.assign(loadingLabel.style, {
+      position:       'absolute',
+      inset:          '0',
+      display:        'flex',
+      alignItems:     'center',
+      justifyContent: 'center',
+      fontSize:       '0.6rem',
+      letterSpacing:  '0.2em',
+      textTransform:  'uppercase',
+      color:          CSS_VARS.bark,
+      opacity:        '0.5',
+      fontFamily:     "'DM Mono', monospace",
+    });
+    loadingLabel.textContent = 'fetching…';
+    popup.appendChild(loadingLabel);
+
+    // Dog image
+    const dogImg = document.createElement('img');
+    dogImg.alt = 'A very good dog';
+    Object.assign(dogImg.style, {
+      width:      '100%',
+      height:     '100%',
+      objectFit:  'cover',
+      display:    'block',
+      opacity:    '0',
+      transition: 'opacity 0.25s',
+    });
+    popup.appendChild(dogImg);
+
+    document.querySelector('.spz-2001-control-s1 .button-group').style.position = "relative";
+    document.querySelector('.spz-2001-control-s1 .button-group').prepend(popup);
+
+    // ── Button inner ring (replaces CSS ::after pseudo-element) ────────────
+
+    const btn = document.querySelector('.spz-2001-control-s1 a.button.is-default-width.w-button');
+    const btnRing = document.createElement('div');
+    Object.assign(btnRing.style, {
+      position:      'absolute',
+      inset:         '4px',
+      border:        `1px solid ${CSS_VARS.rust}`,
+      opacity:       '0',
+      transition:    'opacity 0.25s',
+      pointerEvents: 'none',
+    });
+    btn.appendChild(btnRing);
+
+    // ── Button hover styles (all via JS) ────────────────────────────────────
+
+    // btn.addEventListener('mouseenter', () => {
+    //   btn.style.background  = CSS_VARS.bark;
+    //   btn.style.color       = CSS_VARS.cream;
+    //   btn.style.transform   = 'translateY(-2px)';
+    //   btnRing.style.opacity = '1';
+    // });
+
+    // btn.addEventListener('mouseleave', () => {
+    //   btn.style.background  = 'transparent';
+    //   btn.style.color       = CSS_VARS.bark;
+    //   btn.style.transform   = 'translateY(0)';
+    //   btnRing.style.opacity = '0';
+    // });
+
+    // ── Dog fetching & pre-fetch logic ──────────────────────────────────────
+
+    let prefetchedUrl = null; // holds the ready-to-use URL
+    let isFetching    = false;
+
+    async function fetchDogUrl() {
+      try {
+        const res  = await fetch('https://dog.ceo/api/breeds/image/random');
+        const data = await res.json();
+        return data.message;
+      } catch {
+        return null;
+      }
+    }
+
+    async function prefetchNext() {
+      if (isFetching) return;
+      isFetching    = true;
+      prefetchedUrl = await fetchDogUrl();
+      isFetching    = false;
+    }
+
+    function showImage(url) {
+      dogImg.src    = url;
+      dogImg.onload = () => {
+        loadingLabel.style.display = 'none';
+        dogImg.style.opacity       = '1';
+      };
+    }
+
+    // Pre-fetch the very first dog as soon as the page loads
+    prefetchNext();
+
+    // ── Popup show / hide ───────────────────────────────────────────────────
+
+    let hoverTimer = null;
+
+    btn.addEventListener('mouseenter', () => {
+      clearTimeout(hoverTimer);
+      hoverTimer = setTimeout(async () => {
+        // Reset image state
+        dogImg.style.opacity       = '0';
+        loadingLabel.style.display = 'flex';
+        loadingLabel.textContent   = 'fetching…';
+
+        // Reveal popup
+        popup.style.opacity   = '1';
+        popup.style.transform = 'translateX(-50%) translateY(0) scale(1)';
+
+        if (prefetchedUrl) {
+          // Show instantly — image was already fetched
+          showImage(prefetchedUrl);
+          prefetchedUrl = null;
+          prefetchNext(); // line up the next dog
+        } else {
+          // Pre-fetch wasn't ready yet — fetch on the spot
+          const url = await fetchDogUrl();
+          if (url) {
+            showImage(url);
+            prefetchNext();
+          } else {
+            loadingLabel.textContent = 'woof… try again';
+          }
+        }
+      }, 80);
+    });
+
+    btn.addEventListener('mouseleave', () => {
+      clearTimeout(hoverTimer);
+      popup.style.opacity   = '0';
+      popup.style.transform = 'translateX(-50%) translateY(8px) scale(0.94)';
+    });
+  </script>
+</body>
+</html>
