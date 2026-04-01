@@ -219,12 +219,11 @@
     });
     popup.appendChild(dogImg);
 
-    document.querySelector('.spz-2001-control-s1 .button-group').style.position = "relative";
-    document.querySelector('.spz-2001-control-s1 .button-group').prepend(popup);
+    document.querySelector('#btnWrap').prepend(popup);
 
     // ── Button inner ring (replaces CSS ::after pseudo-element) ────────────
 
-    const btn = document.querySelector('.spz-2001-control-s1 a.button.is-default-width.w-button');
+    const btn = document.querySelector('#mainBtn');
     const btnRing = document.createElement('div');
     Object.assign(btnRing.style, {
       position:      'absolute',
